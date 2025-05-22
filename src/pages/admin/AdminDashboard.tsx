@@ -6,11 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { users, claims, attendanceRecords } from "@/services/mockData";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { claims, attendanceRecords } from "@/services/mockData";
 import ClaimCard from "@/components/ClaimCard";
 import AttendanceCard from "@/components/AttendanceCard";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
+import UserManagementModal from "@/components/UserManagementModal";
 import { 
   Search, 
   Check, 
@@ -19,14 +22,19 @@ import {
   Users as UsersIcon, 
   FileText, 
   Calendar,
-  Bell
+  Bell,
+  UserPlus,
+  Trash2
 } from "lucide-react";
 
 const AdminDashboard = () => {
   const { toast } = useToast();
-  const { isAdmin } = useUser();
+  const { isAdmin, users, addUser, deleteUser, toggleUserActive } = useUser();
   
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   
   // Redirect if not admin (would normally be handled by protected routes)
   if (!isAdmin) {
@@ -74,6 +82,33 @@ const AdminDashboard = () => {
     toast({
       title: "Claim Rejected",
       description: "The claim has been rejected.",
+    });
+  };
+
+  // Handle user deletion
+  const confirmDeleteUser = (userId: string) => {
+    setDeleteUserId(userId);
+    setIsDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteUser = () => {
+    if (deleteUserId) {
+      deleteUser(deleteUserId);
+      toast({
+        title: "User Deleted",
+        description: "The user has been successfully deleted.",
+      });
+      setDeleteUserId(null);
+      setIsDeleteConfirmOpen(false);
+    }
+  };
+
+  // Handle toggle user active status
+  const handleToggleUserActive = (userId: string) => {
+    toggleUserActive(userId);
+    toast({
+      title: "User Status Updated",
+      description: "The user's active status has been updated.",
     });
   };
 
@@ -131,12 +166,119 @@ const AdminDashboard = () => {
           </Card>
         </div>
         
-        <Tabs defaultValue="approvals">
+        <Tabs defaultValue="users">
           <TabsList className="mb-4">
-            <TabsTrigger value="approvals">Approvals</TabsTrigger>
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="approvals">Approvals</TabsTrigger>
             <TabsTrigger value="attendance">Today's Attendance</TabsTrigger>
           </TabsList>
+          
+          {/* Users Tab */}
+          <TabsContent value="users">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>User Management</CardTitle>
+                    <CardDescription>
+                      Add, edit, and manage system users
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => setIsAddUserModalOpen(true)}>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Add User
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search users..."
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>User ID</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Department</TableHead>
+                        <TableHead>Location</TableHead>
+                        <TableHead>Role</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Leave Balance</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredUsers.map(user => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
+                                {user.name.charAt(0)}
+                              </div>
+                              <span>{user.name}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>{user.id}</TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>{user.department}</TableCell>
+                          <TableCell>{user.location}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              user.role === "admin" 
+                                ? "bg-primary/10 text-primary" 
+                                : "bg-gray-100 text-gray-800"
+                            }`}>
+                              {user.role}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              user.isActive !== false 
+                                ? "bg-status-success/10 text-status-success" 
+                                : "bg-status-error/10 text-status-error"
+                            }`}>
+                              {user.isActive !== false ? "Active" : "Inactive"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {user.leaveBalance ?? 0} days (Used: {user.leaveTaken ?? 0})
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => handleToggleUserActive(user.id)}
+                              >
+                                {user.isActive !== false ? "Deactivate" : "Activate"}
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                className="text-status-error border-status-error hover:bg-status-error hover:text-white"
+                                onClick={() => confirmDeleteUser(user.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
           
           {/* Approvals Tab */}
           <TabsContent value="approvals">
@@ -168,90 +310,6 @@ const AdminDashboard = () => {
                     </p>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Users Tab */}
-          <TabsContent value="users">
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>
-                  Manage users and permissions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="mb-4 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search users..."
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-                
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers.map(user => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
-                                {user.name.charAt(0)}
-                              </div>
-                              <span>{user.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>{user.department}</TableCell>
-                          <TableCell>{user.location}</TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.role === "admin" 
-                                ? "bg-primary/10 text-primary" 
-                                : "bg-gray-100 text-gray-800"
-                            }`}>
-                              {user.role}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.isActive 
-                                ? "bg-status-success/10 text-status-success" 
-                                : "bg-status-error/10 text-status-error"
-                            }`}>
-                              {user.isActive ? "Active" : "Inactive"}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
-                                <User className="h-4 w-4" />
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <FileText className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>
@@ -293,8 +351,8 @@ const AdminDashboard = () => {
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button className="w-full justify-start bg-primary">
-                <User className="mr-2 h-4 w-4" />
+              <Button className="w-full justify-start bg-primary" onClick={() => setIsAddUserModalOpen(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
                 Add New User
               </Button>
               <Button className="w-full justify-start bg-secondary">
@@ -350,6 +408,43 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Add User Modal */}
+        <UserManagementModal 
+          isOpen={isAddUserModalOpen}
+          onClose={() => setIsAddUserModalOpen(false)}
+          onSave={addUser}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this user? This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <Alert variant="destructive" className="mt-4">
+              <AlertDescription>
+                Deleting a user will remove all their data from the system.
+              </AlertDescription>
+            </Alert>
+            
+            <DialogFooter className="mt-4">
+              <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteUser}
+              >
+                Delete User
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

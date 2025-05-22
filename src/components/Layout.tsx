@@ -1,6 +1,6 @@
 
-import React, { ReactNode, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import React, { ReactNode, useState, useEffect } from "react";
+import { Link, useLocation, Navigate } from "react-router-dom";
 import { useUser } from "@/contexts/UserContext";
 import { Button } from "@/components/ui/button";
 import { 
@@ -12,14 +12,17 @@ import {
   Users,
   Menu,
   X,
-  BadgeIndianRupee
+  BadgeIndianRupee,
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
 
 interface LayoutProps {
   children: ReactNode;
   title: string;
+  requireAuth?: boolean;
 }
 
 interface NavItemProps {
@@ -50,11 +53,17 @@ const NavItem = ({ to, icon, label, currentPath, onClick }: NavItemProps) => {
   );
 };
 
-const Layout = ({ children, title }: LayoutProps) => {
-  const { currentUser, isAdmin, toggleUserRole } = useUser();
+const Layout = ({ children, title, requireAuth = true }: LayoutProps) => {
+  const { currentUser, isAdmin, toggleUserRole, logout } = useUser();
   const location = useLocation();
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  const { toast } = useToast();
+
+  // Redirect to login if not authenticated
+  if (requireAuth && !currentUser) {
+    return <Navigate to="/login" />;
+  }
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -64,6 +73,14 @@ const Layout = ({ children, title }: LayoutProps) => {
     if (isMobile) {
       setSidebarOpen(false);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logged out successfully",
+      description: "You have been logged out of the system."
+    });
   };
 
   return (
@@ -149,7 +166,7 @@ const Layout = ({ children, title }: LayoutProps) => {
             )}
           </nav>
 
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-200 space-y-2">
             <Button 
               variant="outline" 
               className="w-full justify-start text-gray-600 hover:text-primary"
@@ -157,6 +174,15 @@ const Layout = ({ children, title }: LayoutProps) => {
             >
               <User className="mr-2 h-4 w-4" />
               Switch to {isAdmin ? "User" : "Admin"} Role
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="w-full justify-start text-gray-600 hover:text-status-error hover:border-status-error"
+              onClick={handleLogout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
             </Button>
           </div>
         </div>
