@@ -3,14 +3,14 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import StatusBadge from "./StatusBadge";
 import { AttendanceRecord } from "@/services/mockData";
-import { Calendar, Clock, Map, FileText } from "lucide-react";
+import { Calendar, Clock, Map, FileText, Briefcase } from "lucide-react";
 
 interface AttendanceCardProps {
   record: AttendanceRecord;
 }
 
 const AttendanceCard = ({ record }: AttendanceCardProps) => {
-  const { userName, date, status, checkInTime, checkOutTime, location, notes } = record;
+  const { userName, date, status, checkInTime, checkOutTime, location, notes, project } = record;
 
   const formattedDate = new Date(date).toLocaleDateString("en-US", {
     year: "numeric",
@@ -33,6 +33,13 @@ const AttendanceCard = ({ record }: AttendanceCardProps) => {
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2 space-y-3">
+        {project && (
+          <div className="flex items-center text-sm">
+            <Briefcase className="h-4 w-4 mr-2 text-gray-500" />
+            <span>{project}</span>
+          </div>
+        )}
+        
         {(checkInTime || checkOutTime) && (
           <div className="flex items-center text-sm">
             <Clock className="h-4 w-4 mr-2 text-gray-500" />

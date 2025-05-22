@@ -21,15 +21,20 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
       
       // Attendance statuses
       case "present":
+      case "weekly-present":
+      case "holiday-present":
+      case "half-day-present":
         return "bg-status-success text-white";
-      case "absent":
+      case "leave":
+      case "half-day-leave":
         return "bg-status-error text-white";
+      case "weekly-off":
+      case "holiday-off":
+        return "bg-gray-400 text-white";
+      case "comp-off":
+        return "bg-blue-400 text-white";
       case "late":
         return "bg-status-warning text-black";
-      case "on-leave":
-        return "bg-blue-400 text-white";
-      case "sick":
-        return "bg-orange-400 text-white";
       
       default:
         return "bg-gray-400 text-white";
@@ -38,7 +43,7 @@ const StatusBadge = ({ status, className }: StatusBadgeProps) => {
 
   return (
     <Badge className={cn(getStatusStyles(), "font-medium capitalize", className)}>
-      {status.replace("-", " ")}
+      {status.replace(/-/g, " ")}
     </Badge>
   );
 };

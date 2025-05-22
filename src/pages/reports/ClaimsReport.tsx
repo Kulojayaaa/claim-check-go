@@ -7,10 +7,40 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { claims, claimCategories } from "@/services/mockData";
+import { claims } from "@/services/mockData";
 import StatusBadge from "@/components/StatusBadge";
 import { useUser } from "@/contexts/UserContext";
-import { BarChart, ChevronLeft, Download, FileText, Search } from "lucide-react";
+import { BarChart, ChevronLeft, Download, FileText, Search, IndianRupee, Briefcase } from "lucide-react";
+
+// List of expense categories
+const expenseCategories = [
+  "Staff welfare",
+  "Fuel",
+  "Printer & Stationery",
+  "Postage & Courier",
+  "EB & water Bill",
+  "Room Rent & Hotel Bill",
+  "Travel & DA",
+  "Medical",
+  "Mobile Recharge",
+  "Safety Shoe",
+  "Repairs & Maintenance",
+  "Bike & Car - Service & Maintenance",
+  "Material Purchase",
+  "Transport & Labour",
+  "Loading & Unloading",
+  "Promotion & Other",
+  "Miscellaneous"
+];
+
+const projectOptions = [
+  "All Projects",
+  "Project A",
+  "Project B",
+  "Project C",
+  "Project D",
+  "Head Office"
+];
 
 const ClaimsReport = () => {
   const navigate = useNavigate();
@@ -20,6 +50,7 @@ const ClaimsReport = () => {
   const [endDate, setEndDate] = useState("");
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState("all");
+  const [project, setProject] = useState("All Projects");
   const [searchQuery, setSearchQuery] = useState("");
   
   // Filter claims based on user role
@@ -54,14 +85,19 @@ const ClaimsReport = () => {
     ? categoryFilteredClaims
     : categoryFilteredClaims.filter(claim => claim.status === status);
   
+  // Filter by project
+  const projectFilteredClaims = project === "All Projects"
+    ? statusFilteredClaims
+    : statusFilteredClaims.filter(claim => claim.project === project);
+  
   // Filter by search
   const filteredClaims = searchQuery
-    ? statusFilteredClaims.filter(claim => 
+    ? projectFilteredClaims.filter(claim => 
         claim.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         claim.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         claim.userName.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : statusFilteredClaims;
+    : projectFilteredClaims;
   
   // Calculate totals
   const totalAmount = filteredClaims.reduce((sum, claim) => sum + claim.amount, 0);
@@ -80,9 +116,10 @@ const ClaimsReport = () => {
   
   // Format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-IN", {
       style: "currency",
-      currency: "USD"
+      currency: "INR",
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
@@ -107,7 +144,7 @@ const ClaimsReport = () => {
             <CardDescription>Refine your claims report</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Start Date</label>
                 <Input 
@@ -125,6 +162,20 @@ const ClaimsReport = () => {
                 />
               </div>
               <div className="space-y-2">
+                <label className="text-sm font-medium">Project</label>
+                <Select value={project} onValueChange={setProject}>
+                  <SelectTrigger className="flex items-center">
+                    <Briefcase className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projectOptions.map(proj => (
+                      <SelectItem key={proj} value={proj}>{proj}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <label className="text-sm font-medium">Category</label>
                 <Select value={category} onValueChange={setCategory}>
                   <SelectTrigger>
@@ -132,7 +183,7 @@ const ClaimsReport = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
-                    {claimCategories.map(cat => (
+                    {expenseCategories.map(cat => (
                       <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                     ))}
                   </SelectContent>
@@ -152,15 +203,18 @@ const ClaimsReport = () => {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="mt-4 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search claims..."
-                className="pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search claims..."
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -175,8 +229,9 @@ const ClaimsReport = () => {
               <div className="flex items-end justify-between">
                 <div>
                   <p className="text-3xl font-bold">{filteredClaims.length}</p>
-                  <p className="text-sm text-gray-500">
-                    {formatCurrency(totalAmount)}
+                  <p className="text-sm text-gray-500 flex items-center">
+                    <IndianRupee className="h-3 w-3 mr-1" />
+                    {formatCurrency(totalAmount).replace('₹', '')}
                   </p>
                 </div>
                 <FileText className="h-8 w-8 text-primary opacity-70" />
@@ -194,8 +249,9 @@ const ClaimsReport = () => {
                   <p className="text-3xl font-bold">
                     {filteredClaims.filter(c => c.status === "approved").length}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {formatCurrency(approvedAmount)}
+                  <p className="text-sm text-gray-500 flex items-center">
+                    <IndianRupee className="h-3 w-3 mr-1" />
+                    {formatCurrency(approvedAmount).replace('₹', '')}
                   </p>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-status-success/20 flex items-center justify-center">
@@ -215,8 +271,9 @@ const ClaimsReport = () => {
                   <p className="text-3xl font-bold">
                     {filteredClaims.filter(c => c.status === "pending").length}
                   </p>
-                  <p className="text-sm text-gray-500">
-                    {formatCurrency(pendingAmount)}
+                  <p className="text-sm text-gray-500 flex items-center">
+                    <IndianRupee className="h-3 w-3 mr-1" />
+                    {formatCurrency(pendingAmount).replace('₹', '')}
                   </p>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-status-warning/20 flex items-center justify-center">
@@ -241,7 +298,10 @@ const ClaimsReport = () => {
                       <div key={cat} className="space-y-1">
                         <div className="flex justify-between text-sm">
                           <span>{cat}</span>
-                          <span>{formatCurrency(amount)}</span>
+                          <span className="flex items-center">
+                            <IndianRupee className="h-3 w-3 mr-1" />
+                            {formatCurrency(amount).replace('₹', '')}
+                          </span>
                         </div>
                         <div className="w-full bg-gray-100 rounded-full h-2.5">
                           <div 
@@ -337,6 +397,7 @@ const ClaimsReport = () => {
                     <TableRow>
                       <TableHead>Date</TableHead>
                       {isAdmin && <TableHead>Employee</TableHead>}
+                      <TableHead>Project</TableHead>
                       <TableHead>Category</TableHead>
                       <TableHead>Description</TableHead>
                       <TableHead>Amount</TableHead>
@@ -350,12 +411,16 @@ const ClaimsReport = () => {
                           {new Date(claim.date).toLocaleDateString()}
                         </TableCell>
                         {isAdmin && <TableCell>{claim.userName}</TableCell>}
+                        <TableCell>{claim.project || "-"}</TableCell>
                         <TableCell>{claim.category}</TableCell>
                         <TableCell className="max-w-xs truncate">
                           {claim.description}
                         </TableCell>
-                        <TableCell>
-                          {formatCurrency(claim.amount)}
+                        <TableCell className="whitespace-nowrap">
+                          <div className="flex items-center">
+                            <IndianRupee className="h-3 w-3 mr-1" />
+                            {formatCurrency(claim.amount).replace('₹', '')}
+                          </div>
                         </TableCell>
                         <TableCell>
                           <StatusBadge status={claim.status} />

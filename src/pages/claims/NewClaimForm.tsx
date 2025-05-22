@@ -23,8 +23,35 @@ import {
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
-import { claimCategories } from "@/services/mockData";
-import { Calendar, Upload, FileText } from "lucide-react";
+import { Calendar, Upload, FileText, IndianRupee, Briefcase } from "lucide-react";
+
+const expenseCategories = [
+  "Staff welfare",
+  "Fuel",
+  "Printer & Stationery",
+  "Postage & Courier",
+  "EB & water Bill",
+  "Room Rent & Hotel Bill",
+  "Travel & DA",
+  "Medical",
+  "Mobile Recharge",
+  "Safety Shoe",
+  "Repairs & Maintenance",
+  "Bike & Car - Service & Maintenance",
+  "Material Purchase",
+  "Transport & Labour",
+  "Loading & Unloading",
+  "Promotion & Other",
+  "Miscellaneous"
+];
+
+const projectOptions = [
+  "Project A",
+  "Project B",
+  "Project C",
+  "Project D",
+  "Head Office"
+];
 
 const NewClaimForm = () => {
   const navigate = useNavigate();
@@ -37,6 +64,7 @@ const NewClaimForm = () => {
     date: new Date().toISOString().split('T')[0],
     description: "",
     receipt: null as File | null,
+    project: "",
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,7 +101,7 @@ const NewClaimForm = () => {
     setIsSubmitting(true);
 
     // Validate form
-    if (!formData.category || !formData.amount || !formData.date || !formData.description) {
+    if (!formData.category || !formData.amount || !formData.date || !formData.description || !formData.project) {
       toast({
         title: "Missing information",
         description: "Please fill in all required fields",
@@ -104,18 +132,39 @@ const NewClaimForm = () => {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-6">
+              {/* Project */}
+              <div className="space-y-2">
+                <Label htmlFor="project">Project <span className="text-red-500">*</span></Label>
+                <Select
+                  value={formData.project}
+                  onValueChange={(value) => handleSelectChange("project", value)}
+                >
+                  <SelectTrigger id="project" className="flex items-center">
+                    <Briefcase className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projectOptions.map((project) => (
+                      <SelectItem key={project} value={project}>
+                        {project}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {/* Category */}
               <div className="space-y-2">
-                <Label htmlFor="category">Category <span className="text-red-500">*</span></Label>
+                <Label htmlFor="category">Expense Category <span className="text-red-500">*</span></Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) => handleSelectChange("category", value)}
                 >
                   <SelectTrigger id="category">
-                    <SelectValue placeholder="Select category" />
+                    <SelectValue placeholder="Select expense category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {claimCategories.map((category) => (
+                    {expenseCategories.map((category) => (
                       <SelectItem key={category} value={category}>
                         {category}
                       </SelectItem>
@@ -126,9 +175,9 @@ const NewClaimForm = () => {
 
               {/* Amount */}
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount (USD) <span className="text-red-500">*</span></Label>
+                <Label htmlFor="amount">Amount (INR) <span className="text-red-500">*</span></Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
                   <Input
                     id="amount"
                     name="amount"

@@ -21,11 +21,30 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 // Route guard component
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  const { isAuthenticated } = useUser();
+const ProtectedRoute = ({ children, adminOnly = false }: { children: JSX.Element, adminOnly?: boolean }) => {
+  const { isAuthenticated, isAdmin } = useUser();
   
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
+  }
+  
+  if (adminOnly && !isAdmin) {
+    return <Navigate to="/" />;
+  }
+  
+  return children;
+};
+
+// User route guard - prevents admins from accessing user-specific features
+const UserOnlyRoute = ({ children }: { children: JSX.Element }) => {
+  const { isAuthenticated, isAdmin } = useUser();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+  
+  if (isAdmin) {
+    return <Navigate to="/admin" />;
   }
   
   return children;
@@ -40,6 +59,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            
+            {/* User routes */}
             <Route path="/" element={
               <ProtectedRoute>
                 <HomePage />
@@ -51,20 +72,22 @@ const App = () => (
               </ProtectedRoute>
             } />
             <Route path="/claims/new" element={
-              <ProtectedRoute>
+              <UserOnlyRoute>
                 <NewClaimForm />
-              </ProtectedRoute>
+              </UserOnlyRoute>
             } />
             <Route path="/attendance" element={
-              <ProtectedRoute>
+              <UserOnlyRoute>
                 <AttendancePage />
-              </ProtectedRoute>
+              </UserOnlyRoute>
             } />
             <Route path="/leave" element={
-              <ProtectedRoute>
+              <UserOnlyRoute>
                 <LeavePage />
-              </ProtectedRoute>
+              </UserOnlyRoute>
             } />
+            
+            {/* Report routes - available to all authenticated users */}
             <Route path="/reports" element={
               <ProtectedRoute>
                 <ReportsPage />
@@ -80,16 +103,20 @@ const App = () => (
                 <ClaimsReport />
               </ProtectedRoute>
             } />
+            
+            {/* Admin routes */}
             <Route path="/admin" element={
-              <ProtectedRoute>
+              <ProtectedRoute adminOnly={true}>
                 <AdminDashboard />
               </ProtectedRoute>
             } />
             <Route path="/admin/leave" element={
-              <ProtectedRoute>
+              <ProtectedRoute adminOnly={true}>
                 <LeaveManagement />
               </ProtectedRoute>
             } />
+            
+            {/* 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

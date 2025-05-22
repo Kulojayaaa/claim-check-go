@@ -7,11 +7,31 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { attendanceRecords, attendanceStatusOptions } from "@/services/mockData";
+import { attendanceRecords } from "@/services/mockData";
 import AttendanceCard from "@/components/AttendanceCard";
 import { useUser } from "@/contexts/UserContext";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, Map, Check, Calendar as CalendarIcon } from "lucide-react";
+import { Clock, Map, Check, Calendar as CalendarIcon, Briefcase } from "lucide-react";
+
+const attendanceStatusOptions = [
+  { value: "present", label: "Present" },
+  { value: "leave", label: "Leave" },
+  { value: "weekly-off", label: "Weekly Off" },
+  { value: "weekly-present", label: "Weekly Present" },
+  { value: "comp-off", label: "Comp Off" },
+  { value: "holiday-off", label: "Holiday Off" },
+  { value: "holiday-present", label: "Holiday Present" },
+  { value: "half-day-present", label: "Half day Present" },
+  { value: "half-day-leave", label: "Half Day Leave" },
+];
+
+const projectOptions = [
+  "Project A",
+  "Project B",
+  "Project C",
+  "Project D",
+  "Head Office"
+];
 
 const AttendancePage = () => {
   const { currentUser } = useUser();
@@ -20,6 +40,7 @@ const AttendancePage = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [status, setStatus] = useState("present");
   const [notes, setNotes] = useState("");
+  const [project, setProject] = useState("");
   const [location, setLocation] = useState<{lat: number; lng: number; address: string} | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isCheckingIn, setIsCheckingIn] = useState(false);
@@ -45,7 +66,7 @@ const AttendancePage = () => {
   const selectedDateStr = selectedDate ? formatDate(selectedDate) : '';
   const selectedDateRecords = userAttendance.filter(record => record.date === selectedDateStr);
   
-  // Get location
+  // Get location automatically
   const getLocation = () => {
     setIsLoading(true);
     
@@ -87,10 +108,10 @@ const AttendancePage = () => {
     setIsCheckingIn(true);
     
     // Validate
-    if (!status) {
+    if (!status || !project) {
       toast({
-        title: "Status Required",
-        description: "Please select an attendance status.",
+        title: "Required Fields Missing",
+        description: "Please select both status and project.",
         variant: "destructive"
       });
       setIsCheckingIn(false);
@@ -140,6 +161,11 @@ const AttendancePage = () => {
                       <p className="text-sm text-gray-500">
                         You've checked in as <span className="capitalize font-medium">{todayRecord?.status}</span> at {todayRecord?.checkInTime || "N/A"}
                       </p>
+                      {todayRecord?.project && (
+                        <p className="text-sm text-gray-500">
+                          Project: <span className="font-medium">{todayRecord.project}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
                   
@@ -173,6 +199,23 @@ const AttendancePage = () => {
                         <span>{new Date().toLocaleTimeString()}</span>
                       </div>
                     </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Project</label>
+                    <Select value={project} onValueChange={setProject}>
+                      <SelectTrigger className="flex items-center">
+                        <Briefcase className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                        <SelectValue placeholder="Select project" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {projectOptions.map(project => (
+                          <SelectItem key={project} value={project}>
+                            {project}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   
                   <div className="space-y-2">
@@ -279,25 +322,25 @@ const AttendancePage = () => {
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Present Days</span>
                   <span className="font-medium">
-                    {userAttendance.filter(r => r.status === "present").length}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Late Days</span>
-                  <span className="font-medium">
-                    {userAttendance.filter(r => r.status === "late").length}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Absent Days</span>
-                  <span className="font-medium">
-                    {userAttendance.filter(r => r.status === "absent").length}
+                    {userAttendance.filter(r => r.status === "present" || r.status === "weekly-present" || r.status === "holiday-present" || r.status === "half-day-present").length}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm">Leave Days</span>
                   <span className="font-medium">
-                    {userAttendance.filter(r => r.status === "on-leave" || r.status === "sick").length}
+                    {userAttendance.filter(r => r.status === "leave" || r.status === "half-day-leave").length}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Weekly Off</span>
+                  <span className="font-medium">
+                    {userAttendance.filter(r => r.status === "weekly-off").length}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm">Holiday</span>
+                  <span className="font-medium">
+                    {userAttendance.filter(r => r.status === "holiday-off" || r.status === "holiday-present").length}
                   </span>
                 </div>
                 <div className="pt-2 border-t">
@@ -306,8 +349,12 @@ const AttendancePage = () => {
                     <span className="font-medium">
                       {userAttendance.length > 0 
                         ? Math.round(
-                            (userAttendance.filter(r => r.status === "present").length / 
-                            userAttendance.length) * 100
+                            (userAttendance.filter(r => 
+                              r.status === "present" || 
+                              r.status === "weekly-present" || 
+                              r.status === "holiday-present" || 
+                              r.status === "half-day-present"
+                            ).length / userAttendance.length) * 100
                           )
                         : 0}%
                     </span>
@@ -326,11 +373,11 @@ const AttendancePage = () => {
                 {attendanceStatusOptions.map(option => (
                   <div key={option.value} className="flex items-center">
                     <div className={`w-3 h-3 rounded-full mr-2 ${
-                      option.value === "present" ? "bg-status-success" :
-                      option.value === "absent" ? "bg-status-error" :
-                      option.value === "late" ? "bg-status-warning" :
-                      option.value === "on-leave" ? "bg-blue-400" :
-                      "bg-orange-400"
+                      option.value === "present" || option.value === "weekly-present" || option.value === "holiday-present" || option.value === "half-day-present" ? "bg-status-success" :
+                      option.value === "leave" || option.value === "half-day-leave" ? "bg-status-error" :
+                      option.value === "comp-off" ? "bg-blue-400" :
+                      option.value === "weekly-off" || option.value === "holiday-off" ? "bg-gray-400" :
+                      "bg-status-warning"
                     }`} />
                     <span>{option.label}</span>
                   </div>
