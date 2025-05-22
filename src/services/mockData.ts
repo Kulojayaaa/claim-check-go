@@ -1,4 +1,3 @@
-
 export interface Claim {
   id: string;
   userId: string;
@@ -243,3 +242,169 @@ export const attendanceStatusOptions = [
   { value: "on-leave", label: "On Leave" },
   { value: "sick", label: "Sick Leave" }
 ];
+
+// Add Leave Types and Leave Requests
+export const leaveTypes = [
+  "Annual Leave",
+  "Sick Leave",
+  "Personal Leave",
+  "Bereavement",
+  "Compensatory Off",
+  "Unpaid Leave"
+];
+
+export interface LeaveRequest {
+  id: string;
+  userId: string;
+  userName: string;
+  leaveType: string;
+  startDate: string;
+  endDate: string;
+  reason: string;
+  status: "pending" | "approved" | "rejected";
+  createdAt: string;
+}
+
+export interface LeaveBalance {
+  userId: string;
+  userName: string;
+  annual: number;
+  sick: number;
+  personal: number;
+  compensatory: number;
+  total: number;
+  used: number;
+}
+
+// Generate Leave Requests
+export const leaveRequests: LeaveRequest[] = [
+  {
+    id: "lr1",
+    userId: "u1",
+    userName: "John Doe",
+    leaveType: "Annual Leave",
+    startDate: "2025-05-25",
+    endDate: "2025-05-27",
+    reason: "Family vacation",
+    status: "approved",
+    createdAt: "2025-05-15T10:30:00"
+  },
+  {
+    id: "lr2",
+    userId: "u2",
+    userName: "Jane Smith",
+    leaveType: "Sick Leave",
+    startDate: "2025-05-24",
+    endDate: "2025-05-24",
+    reason: "Not feeling well",
+    status: "approved",
+    createdAt: "2025-05-23T08:15:00"
+  },
+  {
+    id: "lr3",
+    userId: "u3",
+    userName: "Michael Johnson",
+    leaveType: "Personal Leave",
+    startDate: "2025-05-30",
+    endDate: "2025-05-31",
+    reason: "Personal matters",
+    status: "pending",
+    createdAt: "2025-05-20T14:45:00"
+  },
+  {
+    id: "lr4",
+    userId: "u1",
+    userName: "John Doe",
+    leaveType: "Bereavement",
+    startDate: "2025-05-10",
+    endDate: "2025-05-12",
+    reason: "Family emergency",
+    status: "approved",
+    createdAt: "2025-05-09T09:00:00"
+  },
+  {
+    id: "lr5",
+    userId: "u4",
+    userName: "Emily Brown",
+    leaveType: "Compensatory Off",
+    startDate: "2025-05-28",
+    endDate: "2025-05-28",
+    reason: "Worked on weekend",
+    status: "pending",
+    createdAt: "2025-05-22T16:30:00"
+  },
+  {
+    id: "lr6",
+    userId: "u1",
+    userName: "John Doe",
+    leaveType: "Annual Leave",
+    startDate: "2025-06-15",
+    endDate: "2025-06-18",
+    reason: "Summer vacation",
+    status: "pending",
+    createdAt: "2025-05-20T11:20:00"
+  }
+];
+
+// Generate Leave Balances
+export const leaveBalances: LeaveBalance[] = [
+  {
+    userId: "u1",
+    userName: "John Doe",
+    annual: 15,
+    sick: 10,
+    personal: 5,
+    compensatory: 2,
+    total: 32,
+    used: 7
+  },
+  {
+    userId: "u2",
+    userName: "Jane Smith",
+    annual: 15,
+    sick: 10,
+    personal: 5,
+    compensatory: 0,
+    total: 30,
+    used: 3
+  },
+  {
+    userId: "u3",
+    userName: "Michael Johnson",
+    annual: 12,
+    sick: 10,
+    personal: 5,
+    compensatory: 1,
+    total: 28,
+    used: 5
+  },
+  {
+    userId: "u4",
+    userName: "Emily Brown",
+    annual: 15,
+    sick: 10,
+    personal: 5,
+    compensatory: 3,
+    total: 33,
+    used: 8
+  },
+  {
+    userId: "u5",
+    userName: "David Wilson",
+    annual: 18,
+    sick: 10,
+    personal: 5,
+    compensatory: 0,
+    total: 33,
+    used: 10
+  }
+];
+
+// Update any amount formatter functions to use INR
+export const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0
+  }).format(amount);
+};

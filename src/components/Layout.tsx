@@ -11,7 +11,8 @@ import {
   User,
   Users,
   Menu,
-  X
+  X,
+  BadgeIndianRupee
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -115,6 +116,13 @@ const Layout = ({ children, title }: LayoutProps) => {
               onClick={closeSidebarOnMobile}
             />
             <NavItem 
+              to="/leave" 
+              icon={<BadgeIndianRupee size={20} />} 
+              label="Leave" 
+              currentPath={location.pathname}
+              onClick={closeSidebarOnMobile}
+            />
+            <NavItem 
               to="/reports" 
               icon={<BarChart size={20} />} 
               label="Reports" 
@@ -126,6 +134,15 @@ const Layout = ({ children, title }: LayoutProps) => {
                 to="/admin" 
                 icon={<Users size={20} />} 
                 label="Admin" 
+                currentPath={location.pathname}
+                onClick={closeSidebarOnMobile}
+              />
+            )}
+            {isAdmin && (
+              <NavItem 
+                to="/admin/leave" 
+                icon={<Calendar size={20} />} 
+                label="Leave Management" 
                 currentPath={location.pathname}
                 onClick={closeSidebarOnMobile}
               />

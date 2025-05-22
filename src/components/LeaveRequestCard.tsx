@@ -3,58 +3,57 @@ import React from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "./StatusBadge";
-import { Claim } from "@/services/mockData";
+import { LeaveRequest } from "@/services/mockData";
 import { useUser } from "@/contexts/UserContext";
-import { FileText, Check, X, BadgeIndianRupee } from "lucide-react";
+import { Check, X, Calendar } from "lucide-react";
 
-interface ClaimCardProps {
-  claim: Claim;
+interface LeaveRequestCardProps {
+  leaveRequest: LeaveRequest;
   onApprove?: (id: string) => void;
   onReject?: (id: string) => void;
 }
 
-const ClaimCard = ({ claim, onApprove, onReject }: ClaimCardProps) => {
+const LeaveRequestCard = ({ leaveRequest, onApprove, onReject }: LeaveRequestCardProps) => {
   const { isAdmin } = useUser();
-  const { id, userName, category, amount, description, date, status, receiptUrl } = claim;
+  const { id, userId, userName, leaveType, startDate, endDate, reason, status } = leaveRequest;
 
-  const formattedDate = new Date(date).toLocaleDateString("en-US", {
+  const formattedStartDate = new Date(startDate).toLocaleDateString("en-IN", {
     year: "numeric",
     month: "short",
     day: "numeric"
   });
 
-  const formattedAmount = new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0
-  }).format(amount);
+  const formattedEndDate = new Date(endDate).toLocaleDateString("en-IN", {
+    year: "numeric",
+    month: "short",
+    day: "numeric"
+  });
+
+  // Calculate number of days
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 
   return (
     <Card className="overflow-hidden hover:shadow-md transition-shadow animate-fade-in">
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle className="text-lg font-bold">{category}</CardTitle>
-            <p className="text-sm text-gray-500">{userName} • {formattedDate}</p>
+            <CardTitle className="text-lg font-bold">{leaveType}</CardTitle>
+            <p className="text-sm text-gray-500">{userName}</p>
           </div>
           <StatusBadge status={status} />
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2">
-        <p className="font-semibold text-lg flex items-center">
-          <BadgeIndianRupee className="h-4 w-4 mr-1" />
-          {formattedAmount}
-        </p>
-        <p className="text-gray-700 mt-2">{description}</p>
-        
-        {receiptUrl && (
-          <div className="mt-3">
-            <Button variant="outline" size="sm" className="text-xs">
-              <FileText className="h-3 w-3 mr-1" />
-              View Receipt
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center mb-2">
+          <Calendar className="h-4 w-4 mr-2 text-gray-500" />
+          <p className="text-sm">
+            {formattedStartDate} to {formattedEndDate} ({diffDays} {diffDays === 1 ? 'day' : 'days'})
+          </p>
+        </div>
+        <p className="text-gray-700 mt-2">{reason}</p>
       </CardContent>
       
       {isAdmin && status === "pending" && (
@@ -83,4 +82,4 @@ const ClaimCard = ({ claim, onApprove, onReject }: ClaimCardProps) => {
   );
 };
 
-export default ClaimCard;
+export default LeaveRequestCard;

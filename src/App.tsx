@@ -13,6 +13,8 @@ import ReportsPage from "./pages/reports/ReportsPage";
 import AttendanceReport from "./pages/reports/AttendanceReport";
 import ClaimsReport from "./pages/reports/ClaimsReport";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import LeavePage from "./pages/leave/LeavePage";
+import LeaveManagement from "./pages/admin/LeaveManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,10 +31,12 @@ const App = () => (
             <Route path="/claims" element={<ClaimsPage />} />
             <Route path="/claims/new" element={<NewClaimForm />} />
             <Route path="/attendance" element={<AttendancePage />} />
+            <Route path="/leave" element={<LeavePage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/reports/attendance" element={<AttendanceReport />} />
             <Route path="/reports/claims" element={<ClaimsReport />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/leave" element={<LeaveManagement />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
