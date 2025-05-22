@@ -67,10 +67,10 @@ const Layout = ({ children, title }: LayoutProps) => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
+      {/* Sidebar - increased width from w-64 to w-72 */}
       <div 
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out",
+          "fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-gray-200 transition-transform duration-300 ease-in-out",
           isMobile && !sidebarOpen ? "-translate-x-full" : "translate-x-0"
         )}
       >
@@ -145,10 +145,10 @@ const Layout = ({ children, title }: LayoutProps) => {
         </div>
       </div>
 
-      {/* Main content */}
+      {/* Main content - adjusted margin left to match new sidebar width */}
       <div className={cn(
         "flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out",
-        sidebarOpen ? (isMobile ? "ml-0" : "ml-64") : "ml-0"
+        sidebarOpen ? (isMobile ? "ml-0" : "ml-72") : "ml-0"
       )}>
         {/* Header */}
         <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
