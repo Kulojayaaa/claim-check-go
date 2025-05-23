@@ -10,11 +10,20 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
-import { users, projects } from "@/services/mockData";
-import { Users, FileText, CalendarDays, Settings, User, Plus, BarChart3 } from "lucide-react";
+import { users } from "@/services/mockData";
+import { Users, FileText, CalendarDays, Settings, User, Plus, BarChart3, Briefcase } from "lucide-react";
 import StatusBadge from "@/components/StatusBadge";
 import StatsCard from "@/components/StatsCard";
 import ProjectManagement from "@/components/ProjectManagement";
+
+// Mock projects data since it's not exported from mockData
+const projects = [
+  { id: 1, name: "Project A", status: "active" },
+  { id: 2, name: "Project B", status: "active" },
+  { id: 3, name: "Project C", status: "inactive" },
+  { id: 4, name: "Project D", status: "active" },
+  { id: 5, name: "Head Office", status: "active" },
+];
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -90,9 +99,9 @@ const AdminDashboard = () => {
               <BarChart3 className="h-8 w-8 mb-2" />
               <span>View Reports</span>
             </Button>
-            <Button variant="outline" className="h-24 flex flex-col" onClick={() => navigate("/admin/leave")}>
-              <CalendarDays className="h-8 w-8 mb-2" />
-              <span>Manage Leave</span>
+            <Button variant="outline" className="h-24 flex flex-col" onClick={() => navigate("/admin/projects")}>
+              <Briefcase className="h-8 w-8 mb-2" />
+              <span>Manage Projects</span>
             </Button>
           </CardContent>
         </Card>
@@ -142,9 +151,9 @@ const AdminDashboard = () => {
                         <TableRow key={user.id}>
                           <TableCell>{user.name}</TableCell>
                           <TableCell>{user.email}</TableCell>
-                          <TableCell>{user.isAdmin ? "Admin" : "User"}</TableCell>
+                          <TableCell>{user.role === "admin" ? "Admin" : "User"}</TableCell>
                           <TableCell>
-                            <StatusBadge status={user.status === "active" ? "approved" : "rejected"} />
+                            <StatusBadge status={user.role === "admin" ? "approved" : "pending"} />
                           </TableCell>
                           <TableCell className="text-right space-x-2">
                             <Button 

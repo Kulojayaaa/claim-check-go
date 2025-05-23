@@ -9,6 +9,7 @@ interface StatsCardProps {
   description?: string;
   icon?: React.ReactNode;
   className?: string;
+  color?: string;
   trend?: {
     value: number;
     isPositive: boolean;
@@ -21,6 +22,7 @@ const StatsCard = ({
   description,
   icon,
   className,
+  color,
   trend
 }: StatsCardProps) => {
   return (

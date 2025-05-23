@@ -52,6 +52,15 @@ const ClaimsReport = () => {
   const [project, setProject] = useState("All Projects");
   const [searchQuery, setSearchQuery] = useState("");
   
+  // Format currency with Rupee symbol
+  const formatRupee = (amount: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0
+    }).format(amount);
+  };
+  
   // Filter claims based on user role
   const userClaims = isAdmin 
     ? claims 
@@ -221,7 +230,7 @@ const ClaimsReport = () => {
                   <p className="text-3xl font-bold">{filteredClaims.length}</p>
                   <p className="text-sm text-gray-500 flex items-center">
                     <IndianRupee className="h-3 w-3 mr-1" />
-                    {formatCurrency(totalAmount).replace('₹', '')}
+                    {formatRupee(totalAmount).replace('₹', '')}
                   </p>
                 </div>
                 <FileText className="h-8 w-8 text-primary opacity-70" />
@@ -241,7 +250,7 @@ const ClaimsReport = () => {
                   </p>
                   <p className="text-sm text-gray-500 flex items-center">
                     <IndianRupee className="h-3 w-3 mr-1" />
-                    {formatCurrency(approvedAmount).replace('₹', '')}
+                    {formatRupee(approvedAmount).replace('₹', '')}
                   </p>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-status-success/20 flex items-center justify-center">
@@ -263,7 +272,7 @@ const ClaimsReport = () => {
                   </p>
                   <p className="text-sm text-gray-500 flex items-center">
                     <IndianRupee className="h-3 w-3 mr-1" />
-                    {formatCurrency(pendingAmount).replace('₹', '')}
+                    {formatRupee(pendingAmount).replace('₹', '')}
                   </p>
                 </div>
                 <div className="h-8 w-8 rounded-full bg-status-warning/20 flex items-center justify-center">
@@ -290,7 +299,7 @@ const ClaimsReport = () => {
                           <span>{cat}</span>
                           <span className="flex items-center">
                             <IndianRupee className="h-3 w-3 mr-1" />
-                            {formatCurrency(amount).replace('₹', '')}
+                            {formatRupee(amount).replace('₹', '')}
                           </span>
                         </div>
                         <div className="w-full bg-gray-100 rounded-full h-2.5">
@@ -410,7 +419,7 @@ const ClaimsReport = () => {
                         <TableCell className="whitespace-nowrap">
                           <div className="flex items-center">
                             <IndianRupee className="h-3 w-3 mr-1" />
-                            {formatCurrency(claim.amount).replace('₹', '')}
+                            {formatRupee(claim.amount).replace('₹', '')}
                           </div>
                         </TableCell>
                         <TableCell>

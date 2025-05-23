@@ -201,16 +201,16 @@ const NewClaimForm = () => {
           <form onSubmit={handleSubmit}>
             <CardContent>
               <div className="overflow-x-auto rounded-md border mb-6">
-                <Table>
+                <Table className="min-w-full">
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-28">Date</TableHead>
-                      <TableHead className="w-36">Project</TableHead>
-                      <TableHead className="w-40">Category</TableHead>
-                      <TableHead className="w-28">Amount (₹)</TableHead>
+                      <TableHead className="w-[140px]">Date</TableHead>
+                      <TableHead className="w-[180px]">Project</TableHead>
+                      <TableHead className="w-[200px]">Category</TableHead>
+                      <TableHead className="w-[150px]">Amount (₹)</TableHead>
                       <TableHead>Description</TableHead>
-                      <TableHead className="w-24">Receipt</TableHead>
-                      <TableHead className="w-16">Actions</TableHead>
+                      <TableHead className="w-[120px]">Receipt</TableHead>
+                      <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
