@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -7,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { claims } from "@/services/mockData";
+import { claims, formatCurrency } from "@/services/mockData";
 import StatusBadge from "@/components/StatusBadge";
 import { useUser } from "@/contexts/UserContext";
 import { BarChart, ChevronLeft, Download, FileText, Search, IndianRupee, Briefcase } from "lucide-react";
@@ -114,15 +113,6 @@ const ClaimsReport = () => {
     return acc;
   }, {} as Record<string, number>);
   
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
   return (
     <Layout title="Claims Report">
       <div className="space-y-6">
@@ -322,6 +312,7 @@ const ClaimsReport = () => {
             </CardContent>
           </Card>
           
+          {/* Claims by Status */}
           <Card>
             <CardHeader>
               <CardTitle>Claims by Status</CardTitle>

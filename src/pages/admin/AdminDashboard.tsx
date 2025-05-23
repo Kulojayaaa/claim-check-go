@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Layout from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +13,7 @@ import AttendanceCard from "@/components/AttendanceCard";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
 import UserManagementModal from "@/components/UserManagementModal";
+import ProjectManagement from "@/components/ProjectManagement";
 import { 
   Search, 
   Check, 
@@ -24,7 +24,8 @@ import {
   Calendar,
   Bell,
   UserPlus,
-  Trash2
+  Trash2,
+  Settings
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -35,6 +36,9 @@ const AdminDashboard = () => {
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
   
   // Redirect if not admin (would normally be handled by protected routes)
   if (!isAdmin) {
@@ -112,6 +116,32 @@ const AdminDashboard = () => {
     });
   };
 
+  // Handle password reset
+  const openPasswordDialog = (userId: string) => {
+    setSelectedUserId(userId);
+    setNewPassword("");
+    setIsPasswordDialogOpen(true);
+  };
+
+  const handlePasswordReset = () => {
+    if (!selectedUserId || !newPassword.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid password",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // In a real app, you would update the user's password in the database
+    toast({
+      title: "Password Updated",
+      description: "The user's password has been updated successfully.",
+    });
+    
+    setIsPasswordDialogOpen(false);
+  };
+
   return (
     <Layout title="Admin Dashboard">
       <div className="space-y-6">
@@ -169,6 +199,7 @@ const AdminDashboard = () => {
         <Tabs defaultValue="users">
           <TabsList className="mb-4">
             <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="approvals">Approvals</TabsTrigger>
             <TabsTrigger value="attendance">Today's Attendance</TabsTrigger>
           </TabsList>
@@ -257,6 +288,13 @@ const AdminDashboard = () => {
                               <Button 
                                 variant="outline" 
                                 size="sm"
+                                onClick={() => openPasswordDialog(user.id)}
+                              >
+                                Reset Password
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
                                 onClick={() => handleToggleUserActive(user.id)}
                               >
                                 {user.isActive !== false ? "Deactivate" : "Activate"}
@@ -278,6 +316,11 @@ const AdminDashboard = () => {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+          
+          {/* Projects Tab */}
+          <TabsContent value="projects">
+            <ProjectManagement />
           </TabsContent>
           
           {/* Approvals Tab */}
@@ -360,8 +403,8 @@ const AdminDashboard = () => {
                 Send Notification
               </Button>
               <Button className="w-full justify-start bg-accent">
-                <FileText className="mr-2 h-4 w-4" />
-                Generate Report
+                <Settings className="mr-2 h-4 w-4" />
+                System Settings
               </Button>
             </CardContent>
           </Card>
@@ -441,6 +484,42 @@ const AdminDashboard = () => {
                 onClick={handleDeleteUser}
               >
                 Delete User
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Password Reset Dialog */}
+        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reset Password</DialogTitle>
+              <DialogDescription>
+                Enter a new password for this user.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <label htmlFor="new-password" className="text-sm font-medium">
+                  New Password
+                </label>
+                <Input
+                  id="new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                />
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handlePasswordReset}>
+                Update Password
               </Button>
             </DialogFooter>
           </DialogContent>

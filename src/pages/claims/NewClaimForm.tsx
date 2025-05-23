@@ -21,9 +21,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useUser } from "@/contexts/UserContext";
-import { Calendar, Upload, FileText, IndianRupee, Briefcase } from "lucide-react";
+import { Calendar, Upload, FileText, IndianRupee, Briefcase, Plus, Trash2 } from "lucide-react";
 
 const expenseCategories = [
   "Staff welfare",
@@ -53,46 +61,79 @@ const projectOptions = [
   "Head Office"
 ];
 
+// Define expense item structure
+interface ExpenseItem {
+  id: string;
+  category: string;
+  amount: string;
+  date: string;
+  description: string;
+  project: string;
+  receipt: File | null;
+  receiptName: string;
+}
+
+// Generate a unique ID
+const generateId = () => `exp_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 5)}`;
+
+// Create a default expense item
+const createDefaultExpenseItem = (): ExpenseItem => ({
+  id: generateId(),
+  category: "",
+  amount: "",
+  date: new Date().toISOString().split('T')[0],
+  description: "",
+  project: "",
+  receipt: null,
+  receiptName: ""
+});
+
 const NewClaimForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { currentUser } = useUser();
 
-  const [formData, setFormData] = useState({
-    category: "",
-    amount: "",
-    date: new Date().toISOString().split('T')[0],
-    description: "",
-    receipt: null as File | null,
-    project: "",
-  });
-
+  // Use an array of expense items
+  const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([createDefaultExpenseItem()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [receiptFileName, setReceiptFileName] = useState("");
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleAddExpense = () => {
+    setExpenseItems([...expenseItems, createDefaultExpenseItem()]);
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+  const handleRemoveExpense = (id: string) => {
+    if (expenseItems.length === 1) {
+      toast({
+        title: "Cannot remove",
+        description: "You must have at least one expense item",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setExpenseItems(expenseItems.filter(item => item.id !== id));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const updateExpenseItem = (id: string, field: keyof ExpenseItem, value: string | File | null) => {
+    setExpenseItems(items => 
+      items.map(item => 
+        item.id === id 
+          ? { 
+              ...item, 
+              [field]: value,
+              ...(field === 'receipt' && value 
+                ? { receiptName: (value as File).name } 
+                : {})
+            } 
+          : item
+      )
+    );
+  };
+
+  const handleFileChange = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setFormData(prev => ({
-        ...prev,
-        receipt: file
-      }));
-      setReceiptFileName(file.name);
+      updateExpenseItem(id, 'receipt', file);
     }
   };
 
@@ -100,22 +141,32 @@ const NewClaimForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Validate form
-    if (!formData.category || !formData.amount || !formData.date || !formData.description || !formData.project) {
+    // Validate all expense items
+    const invalidItems = expenseItems.filter(
+      item => !item.category || !item.amount || !item.date || !item.description || !item.project
+    );
+
+    if (invalidItems.length > 0) {
       toast({
         title: "Missing information",
-        description: "Please fill in all required fields",
+        description: `Please fill in all required fields for all expense items`,
         variant: "destructive",
       });
       setIsSubmitting(false);
       return;
     }
 
+    // Calculate total amount
+    const totalAmount = expenseItems.reduce(
+      (sum, item) => sum + (parseFloat(item.amount) || 0), 
+      0
+    );
+
     // Simulate API call
     setTimeout(() => {
       toast({
         title: "Claim submitted",
-        description: "Your claim has been submitted successfully",
+        description: `Your claim with ${expenseItems.length} expense item(s) totaling ₹${totalAmount.toFixed(2)} has been submitted`,
       });
       setIsSubmitting(false);
       navigate("/claims");
@@ -124,143 +175,172 @@ const NewClaimForm = () => {
 
   return (
     <Layout title="New Claim">
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>New Expense Claim</CardTitle>
-            <CardDescription>Submit a new expense reimbursement request</CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>New Expense Claim</CardTitle>
+                <CardDescription>Submit a new expense reimbursement request with multiple items</CardDescription>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-gray-500">Total Items: {expenseItems.length}</p>
+                <p className="text-lg font-semibold flex items-center">
+                  <IndianRupee className="h-4 w-4 mr-1" />
+                  {new Intl.NumberFormat("en-IN", {
+                    style: "currency",
+                    currency: "INR",
+                    maximumFractionDigits: 0
+                  }).format(
+                    expenseItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
+                  ).replace('₹', '')}
+                </p>
+              </div>
+            </div>
           </CardHeader>
           <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-6">
-              {/* Project */}
-              <div className="space-y-2">
-                <Label htmlFor="project">Project <span className="text-red-500">*</span></Label>
-                <Select
-                  value={formData.project}
-                  onValueChange={(value) => handleSelectChange("project", value)}
-                >
-                  <SelectTrigger id="project" className="flex items-center">
-                    <Briefcase className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-                    <SelectValue placeholder="Select project" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {projectOptions.map((project) => (
-                      <SelectItem key={project} value={project}>
-                        {project}
-                      </SelectItem>
+            <CardContent>
+              <div className="rounded-md border mb-6">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Project</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Amount (₹)</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Receipt</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {expenseItems.map((item) => (
+                      <TableRow key={item.id}>
+                        {/* Date */}
+                        <TableCell>
+                          <Input
+                            type="date"
+                            value={item.date}
+                            onChange={(e) => updateExpenseItem(item.id, 'date', e.target.value)}
+                            className="w-32"
+                          />
+                        </TableCell>
+                        
+                        {/* Project */}
+                        <TableCell>
+                          <Select
+                            value={item.project}
+                            onValueChange={(value) => updateExpenseItem(item.id, 'project', value)}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue placeholder="Project" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {projectOptions.map((project) => (
+                                <SelectItem key={project} value={project}>
+                                  {project}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        
+                        {/* Category */}
+                        <TableCell>
+                          <Select
+                            value={item.category}
+                            onValueChange={(value) => updateExpenseItem(item.id, 'category', value)}
+                          >
+                            <SelectTrigger className="w-40">
+                              <SelectValue placeholder="Category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {expenseCategories.map((category) => (
+                                <SelectItem key={category} value={category}>
+                                  {category}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        
+                        {/* Amount */}
+                        <TableCell>
+                          <div className="relative">
+                            <IndianRupee className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={item.amount}
+                              onChange={(e) => updateExpenseItem(item.id, 'amount', e.target.value)}
+                              className="pl-7 w-24"
+                            />
+                          </div>
+                        </TableCell>
+                        
+                        {/* Description */}
+                        <TableCell>
+                          <Input
+                            type="text"
+                            placeholder="Brief description"
+                            value={item.description}
+                            onChange={(e) => updateExpenseItem(item.id, 'description', e.target.value)}
+                          />
+                        </TableCell>
+                        
+                        {/* Receipt */}
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <input
+                              id={`receipt-${item.id}`}
+                              type="file"
+                              accept="image/*,.pdf"
+                              className="hidden"
+                              onChange={(e) => handleFileChange(item.id, e)}
+                            />
+                            
+                            <label htmlFor={`receipt-${item.id}`} className="cursor-pointer">
+                              <div className="flex items-center gap-1 text-xs text-primary underline">
+                                <Upload className="h-3 w-3" />
+                                {item.receiptName ? 'Change' : 'Upload'}
+                              </div>
+                            </label>
+                            
+                            {item.receiptName && (
+                              <span className="text-xs truncate max-w-[80px]" title={item.receiptName}>
+                                {item.receiptName}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
+                        
+                        {/* Actions */}
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveExpense(item.id)}
+                          >
+                            <Trash2 className="h-4 w-4 text-status-error" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </SelectContent>
-                </Select>
+                  </TableBody>
+                </Table>
               </div>
-
-              {/* Category */}
-              <div className="space-y-2">
-                <Label htmlFor="category">Expense Category <span className="text-red-500">*</span></Label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => handleSelectChange("category", value)}
-                >
-                  <SelectTrigger id="category">
-                    <SelectValue placeholder="Select expense category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {expenseCategories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Amount */}
-              <div className="space-y-2">
-                <Label htmlFor="amount">Amount (INR) <span className="text-red-500">*</span></Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
-                  <Input
-                    id="amount"
-                    name="amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="0.00"
-                    className="pl-8"
-                    value={formData.amount}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              {/* Date */}
-              <div className="space-y-2">
-                <Label htmlFor="date">Date <span className="text-red-500">*</span></Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                  <Input
-                    id="date"
-                    name="date"
-                    type="date"
-                    className="pl-10"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description">Description <span className="text-red-500">*</span></Label>
-                <Textarea
-                  id="description"
-                  name="description"
-                  placeholder="Provide details about this expense"
-                  rows={3}
-                  value={formData.description}
-                  onChange={handleInputChange}
-                />
-              </div>
-
-              {/* Receipt Upload */}
-              <div className="space-y-2">
-                <Label htmlFor="receipt">Receipt (Optional)</Label>
-                <div className="border-2 border-dashed rounded-lg p-4 text-center">
-                  <input
-                    id="receipt"
-                    type="file"
-                    accept="image/*,.pdf"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                  {receiptFileName ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <FileText className="h-5 w-5 text-gray-500" />
-                      <span className="text-sm">{receiptFileName}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setFormData(prev => ({ ...prev, receipt: null }));
-                          setReceiptFileName("");
-                        }}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <label htmlFor="receipt" className="cursor-pointer block">
-                      <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-500">
-                        Drag and drop or <span className="text-primary">browse</span> to upload
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Supports: JPG, PNG, PDF (Max 5MB)
-                      </p>
-                    </label>
-                  )}
-                </div>
-              </div>
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddExpense}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Another Expense
+              </Button>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button

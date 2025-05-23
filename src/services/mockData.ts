@@ -28,6 +28,16 @@ export interface AttendanceRecord {
   project?: string; // Add project field
 }
 
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: "admin" | "user";
+  department: string;
+  location: string;
+  isActive: boolean;
+}
+
 // Mock users
 export const users: User[] = [
   {
