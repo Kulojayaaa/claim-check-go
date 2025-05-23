@@ -175,7 +175,7 @@ const NewClaimForm = () => {
 
   return (
     <Layout title="New Claim">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto"> {/* Increased max width */}
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -200,39 +200,39 @@ const NewClaimForm = () => {
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent>
-              <div className="rounded-md border mb-6">
+              <div className="overflow-x-auto rounded-md border mb-6">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Project</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Amount (₹)</TableHead>
+                      <TableHead className="w-28">Date</TableHead>
+                      <TableHead className="w-36">Project</TableHead>
+                      <TableHead className="w-40">Category</TableHead>
+                      <TableHead className="w-28">Amount (₹)</TableHead>
                       <TableHead>Description</TableHead>
-                      <TableHead>Receipt</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="w-24">Receipt</TableHead>
+                      <TableHead className="w-16">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {expenseItems.map((item) => (
                       <TableRow key={item.id}>
                         {/* Date */}
-                        <TableCell>
+                        <TableCell className="p-2">
                           <Input
                             type="date"
                             value={item.date}
                             onChange={(e) => updateExpenseItem(item.id, 'date', e.target.value)}
-                            className="w-32"
+                            className="w-full"
                           />
                         </TableCell>
                         
                         {/* Project */}
-                        <TableCell>
+                        <TableCell className="p-2">
                           <Select
                             value={item.project}
                             onValueChange={(value) => updateExpenseItem(item.id, 'project', value)}
                           >
-                            <SelectTrigger className="w-32">
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Project" />
                             </SelectTrigger>
                             <SelectContent>
@@ -246,12 +246,12 @@ const NewClaimForm = () => {
                         </TableCell>
                         
                         {/* Category */}
-                        <TableCell>
+                        <TableCell className="p-2">
                           <Select
                             value={item.category}
                             onValueChange={(value) => updateExpenseItem(item.id, 'category', value)}
                           >
-                            <SelectTrigger className="w-40">
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Category" />
                             </SelectTrigger>
                             <SelectContent>
@@ -265,7 +265,7 @@ const NewClaimForm = () => {
                         </TableCell>
                         
                         {/* Amount */}
-                        <TableCell>
+                        <TableCell className="p-2">
                           <div className="relative">
                             <IndianRupee className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
                             <Input
@@ -274,23 +274,24 @@ const NewClaimForm = () => {
                               step="0.01"
                               value={item.amount}
                               onChange={(e) => updateExpenseItem(item.id, 'amount', e.target.value)}
-                              className="pl-7 w-24"
+                              className="pl-7 w-full"
                             />
                           </div>
                         </TableCell>
                         
                         {/* Description */}
-                        <TableCell>
+                        <TableCell className="p-2">
                           <Input
                             type="text"
                             placeholder="Brief description"
                             value={item.description}
                             onChange={(e) => updateExpenseItem(item.id, 'description', e.target.value)}
+                            className="w-full"
                           />
                         </TableCell>
                         
                         {/* Receipt */}
-                        <TableCell>
+                        <TableCell className="p-2">
                           <div className="flex items-center gap-2">
                             <input
                               id={`receipt-${item.id}`}
@@ -316,12 +317,13 @@ const NewClaimForm = () => {
                         </TableCell>
                         
                         {/* Actions */}
-                        <TableCell>
+                        <TableCell className="p-2">
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
                             onClick={() => handleRemoveExpense(item.id)}
+                            className="w-full"
                           >
                             <Trash2 className="h-4 w-4 text-status-error" />
                           </Button>

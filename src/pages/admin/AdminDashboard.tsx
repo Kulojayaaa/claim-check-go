@@ -1,235 +1,129 @@
+
+// Import necessary components and libraries
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { claims, attendanceRecords } from "@/services/mockData";
-import ClaimCard from "@/components/ClaimCard";
-import AttendanceCard from "@/components/AttendanceCard";
-import { useToast } from "@/hooks/use-toast";
-import { useUser } from "@/contexts/UserContext";
-import UserManagementModal from "@/components/UserManagementModal";
+import { Label } from "@/components/ui/label";
+import { users, projects } from "@/services/mockData";
+import { Users, FileText, CalendarDays, Settings, User, Plus, BarChart3 } from "lucide-react";
+import StatusBadge from "@/components/StatusBadge";
+import StatsCard from "@/components/StatsCard";
 import ProjectManagement from "@/components/ProjectManagement";
-import { 
-  Search, 
-  Check, 
-  X, 
-  User, 
-  Users as UsersIcon, 
-  FileText, 
-  Calendar,
-  Bell,
-  UserPlus,
-  Trash2,
-  Settings
-} from "lucide-react";
 
 const AdminDashboard = () => {
-  const { toast } = useToast();
-  const { isAdmin, users, addUser, deleteUser, toggleUserActive } = useUser();
-  
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
-  const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
   const [newPassword, setNewPassword] = useState("");
-  
-  // Redirect if not admin (would normally be handled by protected routes)
-  if (!isAdmin) {
-    return (
-      <Layout title="Access Denied">
-        <div className="flex flex-col items-center justify-center h-[80vh] text-center">
-          <div className="bg-status-error/10 p-8 rounded-full mb-4">
-            <X className="h-16 w-16 text-status-error" />
-          </div>
-          <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
-          <p className="text-gray-500 max-w-md">
-            You don't have permission to access the admin dashboard. Please contact your administrator.
-          </p>
-        </div>
-      </Layout>
-    );
-  }
-  
-  // Get pending items for approval
-  const pendingClaims = claims.filter(claim => claim.status === "pending");
-  
-  // Get recent attendance
-  const today = new Date().toISOString().split('T')[0];
-  const todayAttendance = attendanceRecords.filter(record => record.date === today);
-  
-  // Filter users by search query
-  const filteredUsers = searchQuery
-    ? users.filter(user => 
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.department.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : users;
-  
-  // Handle claim approval
-  const handleApprove = (id: string) => {
-    toast({
-      title: "Claim Approved",
-      description: "The claim has been successfully approved.",
-    });
-  };
-  
-  // Handle claim rejection
-  const handleReject = (id: string) => {
-    toast({
-      title: "Claim Rejected",
-      description: "The claim has been rejected.",
-    });
-  };
 
-  // Handle user deletion
-  const confirmDeleteUser = (userId: string) => {
-    setDeleteUserId(userId);
-    setIsDeleteConfirmOpen(true);
-  };
-
-  const handleDeleteUser = () => {
-    if (deleteUserId) {
-      deleteUser(deleteUserId);
-      toast({
-        title: "User Deleted",
-        description: "The user has been successfully deleted.",
-      });
-      setDeleteUserId(null);
-      setIsDeleteConfirmOpen(false);
-    }
-  };
-
-  // Handle toggle user active status
-  const handleToggleUserActive = (userId: string) => {
-    toggleUserActive(userId);
-    toast({
-      title: "User Status Updated",
-      description: "The user's active status has been updated.",
-    });
-  };
-
-  // Handle password reset
-  const openPasswordDialog = (userId: string) => {
-    setSelectedUserId(userId);
+  const handleResetPassword = (user: any) => {
+    setSelectedUser(user);
     setNewPassword("");
-    setIsPasswordDialogOpen(true);
+    setShowPasswordModal(true);
   };
 
-  const handlePasswordReset = () => {
-    if (!selectedUserId || !newPassword.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid password",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // In a real app, you would update the user's password in the database
-    toast({
-      title: "Password Updated",
-      description: "The user's password has been updated successfully.",
-    });
-    
-    setIsPasswordDialogOpen(false);
+  const handleSavePassword = () => {
+    // In a real app, this would call an API to save the password
+    console.log(`Password reset for ${selectedUser.name} to: ${newPassword}`);
+    setShowPasswordModal(false);
   };
+
+  const filteredUsers = users.filter(user => 
+    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <Layout title="Admin Dashboard">
-      <div className="space-y-6">
-        {/* Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-500">Total Users</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-end justify-between">
-                <p className="text-3xl font-bold">{users.length}</p>
-                <UsersIcon className="h-8 w-8 text-primary opacity-70" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-500">Pending Claims</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-end justify-between">
-                <p className="text-3xl font-bold">{pendingClaims.length}</p>
-                <FileText className="h-8 w-8 text-accent opacity-70" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-500">Today's Attendance</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-end justify-between">
-                <p className="text-3xl font-bold">{todayAttendance.length}</p>
-                <Calendar className="h-8 w-8 text-secondary opacity-70" />
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-gray-500">Notifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-end justify-between">
-                <p className="text-3xl font-bold">7</p>
-                <Bell className="h-8 w-8 text-yellow-500 opacity-70" />
-              </div>
-            </CardContent>
-          </Card>
+      <div className="grid gap-6">
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatsCard 
+            title="Total Users" 
+            value={users.length} 
+            description="Active system users" 
+            icon={<Users className="h-5 w-5" />}
+            color="blue"
+          />
+          <StatsCard 
+            title="Pending Claims" 
+            value="12" 
+            description="Awaiting approval" 
+            icon={<FileText className="h-5 w-5" />}
+            color="amber"
+          />
+          <StatsCard 
+            title="Leave Requests" 
+            value="5" 
+            description="Requiring review" 
+            icon={<CalendarDays className="h-5 w-5" />}
+            color="green"
+          />
+          <StatsCard 
+            title="Projects" 
+            value={projects.length} 
+            description="Active projects" 
+            icon={<Settings className="h-5 w-5" />}
+            color="purple"
+          />
         </div>
-        
+
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Common administrative tasks</CardDescription>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button variant="outline" className="h-24 flex flex-col" onClick={() => navigate("/admin/users")}>
+              <User className="h-8 w-8 mb-2" />
+              <span>Manage Users</span>
+            </Button>
+            <Button variant="outline" className="h-24 flex flex-col" onClick={() => navigate("/reports")}>
+              <BarChart3 className="h-8 w-8 mb-2" />
+              <span>View Reports</span>
+            </Button>
+            <Button variant="outline" className="h-24 flex flex-col" onClick={() => navigate("/admin/leave")}>
+              <CalendarDays className="h-8 w-8 mb-2" />
+              <span>Manage Leave</span>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Management Tabs */}
         <Tabs defaultValue="users">
-          <TabsList className="mb-4">
+          <TabsList className="grid grid-cols-2 mb-4">
             <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="approvals">Approvals</TabsTrigger>
-            <TabsTrigger value="attendance">Today's Attendance</TabsTrigger>
           </TabsList>
           
           {/* Users Tab */}
           <TabsContent value="users">
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>User Management</CardTitle>
-                    <CardDescription>
-                      Add, edit, and manage system users
-                    </CardDescription>
-                  </div>
-                  <Button onClick={() => setIsAddUserModalOpen(true)}>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Add User
-                  </Button>
-                </div>
+              <CardHeader className="pb-2">
+                <CardTitle>User Management</CardTitle>
+                <CardDescription>Add, edit or remove system users</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="mb-4 relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search users..."
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
+                <div className="flex justify-between mb-4">
+                  <div className="relative w-64">
+                    <Input
+                      placeholder="Search users..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add User
+                  </Button>
                 </div>
                 
                 <div className="rounded-md border">
@@ -237,77 +131,36 @@ const AdminDashboard = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Name</TableHead>
-                        <TableHead>User ID</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Location</TableHead>
                         <TableHead>Role</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Leave Balance</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredUsers.map(user => (
+                      {filteredUsers.map((user) => (
                         <TableRow key={user.id}>
-                          <TableCell className="font-medium">
-                            <div className="flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white">
-                                {user.name.charAt(0)}
-                              </div>
-                              <span>{user.name}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{user.id}</TableCell>
+                          <TableCell>{user.name}</TableCell>
                           <TableCell>{user.email}</TableCell>
-                          <TableCell>{user.department}</TableCell>
-                          <TableCell>{user.location}</TableCell>
+                          <TableCell>{user.isAdmin ? "Admin" : "User"}</TableCell>
                           <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.role === "admin" 
-                                ? "bg-primary/10 text-primary" 
-                                : "bg-gray-100 text-gray-800"
-                            }`}>
-                              {user.role}
-                            </span>
+                            <StatusBadge status={user.status === "active" ? "approved" : "rejected"} />
                           </TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.isActive !== false 
-                                ? "bg-status-success/10 text-status-success" 
-                                : "bg-status-error/10 text-status-error"
-                            }`}>
-                              {user.isActive !== false ? "Active" : "Inactive"}
-                            </span>
-                          </TableCell>
-                          <TableCell>
-                            {user.leaveBalance ?? 0} days (Used: {user.leaveTaken ?? 0})
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex gap-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => openPasswordDialog(user.id)}
-                              >
-                                Reset Password
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleToggleUserActive(user.id)}
-                              >
-                                {user.isActive !== false ? "Deactivate" : "Activate"}
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="text-status-error border-status-error hover:bg-status-error hover:text-white"
-                                onClick={() => confirmDeleteUser(user.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
+                          <TableCell className="text-right space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleResetPassword(user)}
+                            >
+                              Reset Password
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => console.log("Edit user:", user.id)}
+                            >
+                              Edit
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -322,209 +175,40 @@ const AdminDashboard = () => {
           <TabsContent value="projects">
             <ProjectManagement />
           </TabsContent>
-          
-          {/* Approvals Tab */}
-          <TabsContent value="approvals">
-            <Card>
-              <CardHeader>
-                <CardTitle>Pending Approvals</CardTitle>
-                <CardDescription>
-                  Review and manage pending expense claims
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {pendingClaims.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {pendingClaims.map(claim => (
-                      <ClaimCard 
-                        key={claim.id} 
-                        claim={claim}
-                        onApprove={handleApprove}
-                        onReject={handleReject}
-                      />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Check className="h-12 w-12 mx-auto text-status-success mb-4" />
-                    <h3 className="text-lg font-medium">All caught up!</h3>
-                    <p className="text-gray-500">
-                      There are no pending claims requiring your approval.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          {/* Attendance Tab */}
-          <TabsContent value="attendance">
-            <Card>
-              <CardHeader>
-                <CardTitle>Today's Attendance</CardTitle>
-                <CardDescription>
-                  Monitor today's attendance records
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {todayAttendance.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {todayAttendance.map(record => (
-                      <AttendanceCard key={record.id} record={record} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-lg font-medium">No attendance records yet</h3>
-                    <p className="text-gray-500">
-                      There are no attendance records for today.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
-        
-        {/* Admin Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button className="w-full justify-start bg-primary" onClick={() => setIsAddUserModalOpen(true)}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add New User
-              </Button>
-              <Button className="w-full justify-start bg-secondary">
-                <Bell className="mr-2 h-4 w-4" />
-                Send Notification
-              </Button>
-              <Button className="w-full justify-start bg-accent">
-                <Settings className="mr-2 h-4 w-4" />
-                System Settings
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>System Notifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex gap-3 pb-3 border-b">
-                  <div className="bg-status-warning/20 rounded-full p-2 h-fit">
-                    <Bell className="h-4 w-4 text-status-warning" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Low attendance alert</p>
-                    <p className="text-sm text-gray-500">Attendance rate below 80% for Site C</p>
-                    <p className="text-xs text-gray-400 mt-1">1 hour ago</p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3 pb-3 border-b">
-                  <div className="bg-status-success/20 rounded-full p-2 h-fit">
-                    <FileText className="h-4 w-4 text-status-success" />
-                  </div>
-                  <div>
-                    <p className="font-medium">Monthly reports ready</p>
-                    <p className="text-sm text-gray-500">May 2025 reports are available for review</p>
-                    <p className="text-xs text-gray-400 mt-1">3 hours ago</p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <div className="bg-status-error/20 rounded-full p-2 h-fit">
-                    <X className="h-4 w-4 text-status-error" />
-                  </div>
-                  <div>
-                    <p className="font-medium">System maintenance</p>
-                    <p className="text-sm text-gray-500">Scheduled maintenance on May 25, 2025</p>
-                    <p className="text-xs text-gray-400 mt-1">1 day ago</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Add User Modal */}
-        <UserManagementModal 
-          isOpen={isAddUserModalOpen}
-          onClose={() => setIsAddUserModalOpen(false)}
-          onSave={addUser}
-        />
-
-        {/* Delete Confirmation Dialog */}
-        <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Confirm Deletion</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to delete this user? This action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <Alert variant="destructive" className="mt-4">
-              <AlertDescription>
-                Deleting a user will remove all their data from the system.
-              </AlertDescription>
-            </Alert>
-            
-            <DialogFooter className="mt-4">
-              <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)}>
-                Cancel
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={handleDeleteUser}
-              >
-                Delete User
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Password Reset Dialog */}
-        <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Reset Password</DialogTitle>
-              <DialogDescription>
-                Enter a new password for this user.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <label htmlFor="new-password" className="text-sm font-medium">
-                  New Password
-                </label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password"
-                />
-              </div>
-            </div>
-            
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsPasswordDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button onClick={handlePasswordReset}>
-                Update Password
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      {/* Password Reset Modal */}
+      <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset User Password</DialogTitle>
+            <DialogDescription>
+              Enter a new password for {selectedUser?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <Input 
+                id="new-password" 
+                type="password"
+                value={newPassword} 
+                onChange={(e) => setNewPassword(e.target.value)} 
+                placeholder="Enter new password"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowPasswordModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSavePassword} disabled={!newPassword.trim()}>
+                Reset Password
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
