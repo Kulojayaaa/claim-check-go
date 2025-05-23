@@ -11,6 +11,7 @@ export interface Claim {
   approvedBy?: string;
   approvedAt?: string;
   rejectedReason?: string;
+  project?: string; // Add project field
 }
 
 export interface AttendanceRecord {
@@ -18,22 +19,13 @@ export interface AttendanceRecord {
   userId: string;
   userName: string;
   date: string;
-  status: "present" | "absent" | "late" | "on-leave" | "sick";
+  status: string; // Update to allow all possible attendance status values
   checkInTime?: string;
   checkOutTime?: string;
   location?: { lat: number; lng: number; address: string };
   notes?: string;
   approvedBy?: string;
-}
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: "admin" | "user";
-  department: string;
-  location: string;
-  isActive: boolean;
+  project?: string; // Add project field
 }
 
 // Mock users
@@ -234,9 +226,17 @@ export const claimCategories = [
   "Other"
 ];
 
-// Status options for attendance
+// Update attendance status options to match the new values
 export const attendanceStatusOptions = [
   { value: "present", label: "Present" },
+  { value: "leave", label: "Leave" },
+  { value: "weekly-off", label: "Weekly Off" },
+  { value: "weekly-present", label: "Weekly Present" },
+  { value: "comp-off", label: "Comp Off" },
+  { value: "holiday-off", label: "Holiday Off" },
+  { value: "holiday-present", label: "Holiday Present" },
+  { value: "half-day-present", label: "Half day Present" },
+  { value: "half-day-leave", label: "Half Day Leave" },
   { value: "absent", label: "Absent" },
   { value: "late", label: "Late" },
   { value: "on-leave", label: "On Leave" },

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -16,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { claims } from "@/services/mockData";
 import ClaimCard from "@/components/ClaimCard";
 import { useUser } from "@/contexts/UserContext";
-import { Plus, Search, FileText, IndianRupee } from "lucide-react";
+import { Plus, Search, FileText, IndianRupee, Check, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 // List of expense categories
