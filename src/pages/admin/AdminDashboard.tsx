@@ -63,14 +63,15 @@ const AdminDashboard = () => {
           />
           <StatsCard 
             title="Pending Claims" 
-            value="12" 
+            value={12} 
             description="Awaiting approval" 
             icon={<FileText className="h-5 w-5" />}
             color="amber"
+            isCurrency={true}
           />
           <StatsCard 
             title="Leave Requests" 
-            value="5" 
+            value={5} 
             description="Requiring review" 
             icon={<CalendarDays className="h-5 w-5" />}
             color="green"
@@ -142,6 +143,7 @@ const AdminDashboard = () => {
                         <TableHead>Name</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Role</TableHead>
+                        <TableHead>Password</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead className="text-right">Actions</TableHead>
                       </TableRow>
@@ -152,6 +154,7 @@ const AdminDashboard = () => {
                           <TableCell>{user.name}</TableCell>
                           <TableCell>{user.email}</TableCell>
                           <TableCell>{user.role === "admin" ? "Admin" : "User"}</TableCell>
+                          <TableCell>{user.password}</TableCell>
                           <TableCell>
                             <StatusBadge status={user.role === "admin" ? "approved" : "pending"} />
                           </TableCell>

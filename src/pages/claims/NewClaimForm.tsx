@@ -1,222 +1,229 @@
+
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { IndianRupee, Plus, Trash2, UploadCloud } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useUser } from "@/contexts/UserContext";
-import { Calendar, Upload, FileText, IndianRupee, Briefcase, Plus, Trash2 } from "lucide-react";
 
-const expenseCategories = [
-  "Staff welfare",
-  "Fuel",
-  "Printer & Stationery",
-  "Postage & Courier",
-  "EB & water Bill",
-  "Room Rent & Hotel Bill",
-  "Travel & DA",
-  "Medical",
-  "Mobile Recharge",
-  "Safety Shoe",
-  "Repairs & Maintenance",
-  "Bike & Car - Service & Maintenance",
-  "Material Purchase",
-  "Transport & Labour",
-  "Loading & Unloading",
-  "Promotion & Other",
-  "Miscellaneous"
-];
-
-const projectOptions = [
-  "Project A",
-  "Project B",
-  "Project C",
-  "Project D",
-  "Head Office"
-];
-
-// Define expense item structure
-interface ExpenseItem {
+// Expense item type
+type ExpenseItem = {
   id: string;
+  date: string;
+  projectId: string;
   category: string;
   amount: string;
-  date: string;
   description: string;
-  project: string;
-  receipt: File | null;
-  receiptName: string;
-}
+  receipt?: File | null;
+  receiptName?: string;
+};
 
-// Generate a unique ID
-const generateId = () => `exp_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 5)}`;
-
-// Create a default expense item
-const createDefaultExpenseItem = (): ExpenseItem => ({
-  id: generateId(),
-  category: "",
-  amount: "",
-  date: new Date().toISOString().split('T')[0],
-  description: "",
-  project: "",
-  receipt: null,
-  receiptName: ""
-});
+// Mock projects and categories
+const projects = ["Project A", "Project B", "Project C", "Head Office"];
+const categories = ["Travel", "Meals", "Accommodation", "Office Supplies", "Other"];
 
 const NewClaimForm = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { currentUser } = useUser();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([
+    {
+      id: "1",
+      date: new Date().toISOString().split('T')[0],
+      projectId: "",
+      category: "",
+      amount: "",
+      description: "",
+      receipt: null,
+      receiptName: "",
+    },
+  ]);
 
-  // Use an array of expense items
-  const [expenseItems, setExpenseItems] = useState<ExpenseItem[]>([createDefaultExpenseItem()]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleAddExpense = () => {
-    setExpenseItems([...expenseItems, createDefaultExpenseItem()]);
+  const addExpenseItem = () => {
+    const newItem: ExpenseItem = {
+      id: Date.now().toString(),
+      date: new Date().toISOString().split('T')[0],
+      projectId: "",
+      category: "",
+      amount: "",
+      description: "",
+      receipt: null,
+      receiptName: "",
+    };
+    setExpenseItems([...expenseItems, newItem]);
   };
 
-  const handleRemoveExpense = (id: string) => {
-    if (expenseItems.length === 1) {
+  const removeExpenseItem = (id: string) => {
+    if (expenseItems.length <= 1) {
       toast({
-        title: "Cannot remove",
-        description: "You must have at least one expense item",
+        title: "Cannot Remove Item",
+        description: "You must have at least one expense item in your claim.",
         variant: "destructive",
       });
       return;
     }
     
-    setExpenseItems(expenseItems.filter(item => item.id !== id));
+    setExpenseItems(expenseItems.filter((item) => item.id !== id));
   };
 
-  const updateExpenseItem = (id: string, field: keyof ExpenseItem, value: string | File | null) => {
-    setExpenseItems(items => 
-      items.map(item => 
-        item.id === id 
-          ? { 
-              ...item, 
-              [field]: value,
-              ...(field === 'receipt' && value 
-                ? { receiptName: (value as File).name } 
-                : {})
-            } 
-          : item
+  const updateExpenseItem = (id: string, field: keyof ExpenseItem, value: any) => {
+    setExpenseItems(
+      expenseItems.map((item) =>
+        item.id === id ? { ...item, [field]: value } : item
       )
     );
   };
 
-  const handleFileChange = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
+  const handleReceiptUpload = (id: string, file: File | null) => {
+    if (file) {
+      // Check file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Maximum file size is 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check file type (only images and PDFs)
+      const allowedTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+      if (!allowedTypes.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: "Only JPG, PNG, and PDF files are allowed",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       updateExpenseItem(id, 'receipt', file);
+      updateExpenseItem(id, 'receiptName', file.name);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    // Validate all expense items
-    const invalidItems = expenseItems.filter(
-      item => !item.category || !item.amount || !item.date || !item.description || !item.project
-    );
-
-    if (invalidItems.length > 0) {
+    
+    // Basic validation
+    if (!title.trim()) {
       toast({
-        title: "Missing information",
-        description: `Please fill in all required fields for all expense items`,
+        title: "Missing title",
+        description: "Please enter a title for your claim",
         variant: "destructive",
       });
-      setIsSubmitting(false);
       return;
     }
 
-    // Calculate total amount
+    // Check all expense items have required fields
+    const missingFields = expenseItems.some(
+      item => !item.date || !item.projectId || !item.category || !item.amount || !item.description
+    );
+
+    if (missingFields) {
+      toast({
+        title: "Missing information",
+        description: "Please complete all required fields for each expense item",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Calculate total claim amount
     const totalAmount = expenseItems.reduce(
-      (sum, item) => sum + (parseFloat(item.amount) || 0), 
+      (sum, item) => sum + (parseFloat(item.amount) || 0),
       0
     );
 
-    // Simulate API call
-    setTimeout(() => {
-      toast({
-        title: "Claim submitted",
-        description: `Your claim with ${expenseItems.length} expense item(s) totaling ₹${totalAmount.toFixed(2)} has been submitted`,
-      });
-      setIsSubmitting(false);
-      navigate("/claims");
-    }, 1000);
+    // Submit claim (in a real app, this would be an API call)
+    console.log("Submitting claim:", {
+      title,
+      description,
+      totalAmount,
+      items: expenseItems,
+    });
+
+    toast({
+      title: "Claim submitted",
+      description: `Your claim for ₹${totalAmount.toLocaleString('en-IN')} has been submitted for approval`,
+    });
+
+    // Navigate back to claims list
+    navigate("/claims");
+  };
+
+  const calculateTotal = () => {
+    return expenseItems.reduce(
+      (sum, item) => sum + (parseFloat(item.amount) || 0),
+      0
+    );
   };
 
   return (
     <Layout title="New Claim">
-      <div className="max-w-6xl mx-auto"> {/* Increased max width further */}
+      <div className="max-w-7xl mx-auto"> {/* Increased max width even further */}
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle>New Expense Claim</CardTitle>
-                <CardDescription>Submit a new expense reimbursement request with multiple items</CardDescription>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Total Items: {expenseItems.length}</p>
-                <p className="text-lg font-semibold flex items-center">
-                  <IndianRupee className="h-4 w-4 mr-1" />
-                  {new Intl.NumberFormat("en-IN", {
-                    style: "currency",
-                    currency: "INR",
-                    maximumFractionDigits: 0
-                  }).format(
-                    expenseItems.reduce((sum, item) => sum + (parseFloat(item.amount) || 0), 0)
-                  ).replace('₹', '')}
-                </p>
+                <CardDescription>Submit a new expense claim for reimbursement</CardDescription>
               </div>
             </div>
           </CardHeader>
+          
           <form onSubmit={handleSubmit}>
-            <CardContent>
-              <div className="overflow-x-auto rounded-md border mb-6">
+            <CardContent className="space-y-6">
+              {/* Claim Details */}
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="title">Claim Title</Label>
+                  <Input
+                    id="title"
+                    placeholder="Enter a title for this claim"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="description">Additional Details</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Enter any additional details about this claim"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                  />
+                </div>
+              </div>
+              
+              {/* Expense Items Table */}
+              <div className="rounded-md border overflow-hidden">
                 <Table className="min-w-full">
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-[150px]">Date</TableHead> {/* Increased width */}
-                      <TableHead className="w-[180px]">Project</TableHead>
-                      <TableHead className="w-[200px]">Category</TableHead>
-                      <TableHead className="w-[160px]">Amount (₹)</TableHead> {/* Increased width */}
-                      <TableHead className="min-w-[250px]">Description</TableHead> {/* Set minimum width */}
-                      <TableHead className="w-[130px]">Receipt</TableHead> {/* Increased width */}
-                      <TableHead className="w-[80px]">Actions</TableHead>
+                      <TableHead className="w-[160px]">Date</TableHead> {/* Increased width */}
+                      <TableHead className="w-[200px]">Project</TableHead> {/* Increased width */}
+                      <TableHead className="w-[220px]">Category</TableHead> {/* Increased width */}
+                      <TableHead className="w-[180px]">Amount (₹)</TableHead> {/* Increased width */}
+                      <TableHead className="min-w-[280px]">Description</TableHead> {/* Set minimum width */}
+                      <TableHead className="w-[150px]">Receipt</TableHead> {/* Increased width */}
+                      <TableHead className="w-[100px]">Actions</TableHead> {/* Increased width */}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {expenseItems.map((item) => (
                       <TableRow key={item.id}>
                         {/* Date */}
-                        <TableCell className="p-2">
+                        <TableCell>
                           <Input
                             type="date"
                             value={item.date}
@@ -226,16 +233,16 @@ const NewClaimForm = () => {
                         </TableCell>
                         
                         {/* Project */}
-                        <TableCell className="p-2">
+                        <TableCell>
                           <Select
-                            value={item.project}
-                            onValueChange={(value) => updateExpenseItem(item.id, 'project', value)}
+                            value={item.projectId}
+                            onValueChange={(value) => updateExpenseItem(item.id, 'projectId', value)}
                           >
                             <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Project" />
+                              <SelectValue placeholder="Select project" />
                             </SelectTrigger>
                             <SelectContent>
-                              {projectOptions.map((project) => (
+                              {projects.map((project) => (
                                 <SelectItem key={project} value={project}>
                                   {project}
                                 </SelectItem>
@@ -245,16 +252,16 @@ const NewClaimForm = () => {
                         </TableCell>
                         
                         {/* Category */}
-                        <TableCell className="p-2">
+                        <TableCell>
                           <Select
                             value={item.category}
                             onValueChange={(value) => updateExpenseItem(item.id, 'category', value)}
                           >
                             <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Category" />
+                              <SelectValue placeholder="Select category" />
                             </SelectTrigger>
                             <SelectContent>
-                              {expenseCategories.map((category) => (
+                              {categories.map((category) => (
                                 <SelectItem key={category} value={category}>
                                   {category}
                                 </SelectItem>
@@ -264,51 +271,53 @@ const NewClaimForm = () => {
                         </TableCell>
                         
                         {/* Amount */}
-                        <TableCell className="p-2">
-                          <div className="relative">
-                            <IndianRupee className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
+                        <TableCell>
+                          <div className="flex items-center border rounded-md pl-2 bg-background focus-within:ring-1 focus-within:ring-ring">
+                            <IndianRupee className="h-4 w-4 text-muted-foreground" />
                             <Input
                               type="number"
-                              min="0"
-                              step="0.01"
                               value={item.amount}
                               onChange={(e) => updateExpenseItem(item.id, 'amount', e.target.value)}
-                              className="pl-7 w-full"
+                              className="border-0 pl-1 focus-visible:ring-0 focus-visible:ring-offset-0"
+                              placeholder="0.00"
+                              min="0"
+                              step="0.01"
                             />
                           </div>
                         </TableCell>
                         
                         {/* Description */}
-                        <TableCell className="p-2">
+                        <TableCell>
                           <Input
-                            type="text"
-                            placeholder="Brief description"
                             value={item.description}
                             onChange={(e) => updateExpenseItem(item.id, 'description', e.target.value)}
-                            className="w-full"
+                            placeholder="Brief description"
                           />
                         </TableCell>
                         
                         {/* Receipt */}
-                        <TableCell className="p-2">
-                          <div className="flex items-center gap-2">
-                            <input
-                              id={`receipt-${item.id}`}
-                              type="file"
-                              accept="image/*,.pdf"
-                              className="hidden"
-                              onChange={(e) => handleFileChange(item.id, e)}
-                            />
-                            
-                            <label htmlFor={`receipt-${item.id}`} className="cursor-pointer">
-                              <div className="flex items-center gap-1 text-xs text-primary underline">
-                                <Upload className="h-3 w-3" />
-                                {item.receiptName ? 'Change' : 'Upload'}
-                              </div>
+                        <TableCell>
+                          <div className="flex flex-col items-center">
+                            <label 
+                              htmlFor={`receipt-${item.id}`}
+                              className="flex items-center justify-center cursor-pointer w-full h-8 rounded-md text-xs border border-dashed border-muted-foreground/50 hover:bg-muted p-1"
+                            >
+                              <UploadCloud className="h-4 w-4 mr-1" />
+                              <span>{item.receipt ? "Change" : "Upload"}</span>
+                              <input
+                                type="file"
+                                id={`receipt-${item.id}`}
+                                className="sr-only"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0] || null;
+                                  handleReceiptUpload(item.id, file);
+                                }}
+                                accept="image/jpeg,image/png,application/pdf"
+                              />
                             </label>
                             
                             {item.receiptName && (
-                              <span className="text-xs truncate max-w-[90px]" title={item.receiptName}>
+                              <span className="text-xs truncate max-w-[120px]" title={item.receiptName}>
                                 {item.receiptName}
                               </span>
                             )}
@@ -316,15 +325,15 @@ const NewClaimForm = () => {
                         </TableCell>
                         
                         {/* Actions */}
-                        <TableCell className="p-2">
+                        <TableCell>
                           <Button
                             type="button"
                             variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveExpense(item.id)}
-                            className="w-full"
+                            size="icon"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => removeExpenseItem(item.id)}
                           >
-                            <Trash2 className="h-4 w-4 text-status-error" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -333,27 +342,34 @@ const NewClaimForm = () => {
                 </Table>
               </div>
               
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAddExpense}
-                className="w-full"
+              {/* Add Expense Button */}
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full" 
+                onClick={addExpenseItem}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Another Expense
+                Add Another Expense Item
               </Button>
+              
+              {/* Total */}
+              <div className="flex justify-end">
+                <div className="bg-muted p-4 rounded-md">
+                  <div className="text-sm text-muted-foreground">Total Claim Amount</div>
+                  <div className="text-2xl font-bold flex items-center">
+                    <IndianRupee className="h-5 w-5 mr-1" />
+                    {calculateTotal().toLocaleString('en-IN', { maximumFractionDigits: 2 })}
+                  </div>
+                </div>
+              </div>
             </CardContent>
+            
             <CardFooter className="flex justify-between">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate("/claims")}
-              >
+              <Button type="button" variant="outline" onClick={() => navigate("/claims")}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting..." : "Submit Claim"}
-              </Button>
+              <Button type="submit">Submit Claim</Button>
             </CardFooter>
           </form>
         </Card>
