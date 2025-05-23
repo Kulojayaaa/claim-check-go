@@ -2,6 +2,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { IndianRupee } from "lucide-react";
 
 interface StatsCardProps {
   title: string;
@@ -14,6 +15,7 @@ interface StatsCardProps {
     value: number;
     isPositive: boolean;
   };
+  isCurrency?: boolean;
 }
 
 const StatsCard = ({
@@ -23,7 +25,8 @@ const StatsCard = ({
   icon,
   className,
   color,
-  trend
+  trend,
+  isCurrency = false
 }: StatsCardProps) => {
   return (
     <Card className={cn("overflow-hidden", className)}>
@@ -32,7 +35,13 @@ const StatsCard = ({
         {icon && <div className="h-4 w-4 text-muted-foreground">{icon}</div>}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{value}</div>
+        <div className="text-2xl font-bold flex items-center">
+          {isCurrency && <IndianRupee className="h-5 w-5 mr-1" />}
+          {typeof value === 'number' && isCurrency 
+            ? new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(value)
+            : value
+          }
+        </div>
         {(description || trend) && (
           <div className="flex items-center">
             {trend && (

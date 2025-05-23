@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/Layout";
@@ -175,7 +174,7 @@ const NewClaimForm = () => {
 
   return (
     <Layout title="New Claim">
-      <div className="max-w-5xl mx-auto"> {/* Increased max width */}
+      <div className="max-w-6xl mx-auto"> {/* Increased max width further */}
         <Card>
           <CardHeader>
             <div className="flex justify-between items-center">
@@ -204,12 +203,12 @@ const NewClaimForm = () => {
                 <Table className="min-w-full">
                   <TableHeader className="bg-muted/50">
                     <TableRow>
-                      <TableHead className="w-[140px]">Date</TableHead>
+                      <TableHead className="w-[150px]">Date</TableHead> {/* Increased width */}
                       <TableHead className="w-[180px]">Project</TableHead>
                       <TableHead className="w-[200px]">Category</TableHead>
-                      <TableHead className="w-[150px]">Amount (₹)</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="w-[120px]">Receipt</TableHead>
+                      <TableHead className="w-[160px]">Amount (₹)</TableHead> {/* Increased width */}
+                      <TableHead className="min-w-[250px]">Description</TableHead> {/* Set minimum width */}
+                      <TableHead className="w-[130px]">Receipt</TableHead> {/* Increased width */}
                       <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -222,7 +221,7 @@ const NewClaimForm = () => {
                             type="date"
                             value={item.date}
                             onChange={(e) => updateExpenseItem(item.id, 'date', e.target.value)}
-                            className="w-full"
+                            className="w-full text-sm"
                           />
                         </TableCell>
                         
@@ -309,7 +308,7 @@ const NewClaimForm = () => {
                             </label>
                             
                             {item.receiptName && (
-                              <span className="text-xs truncate max-w-[80px]" title={item.receiptName}>
+                              <span className="text-xs truncate max-w-[90px]" title={item.receiptName}>
                                 {item.receiptName}
                               </span>
                             )}
